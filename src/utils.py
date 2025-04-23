@@ -34,5 +34,38 @@ def get_path_period(path_file: str, period_data: str) -> DataFrame:
      таблицу в заданном периуде"""
 
     df = pd.read_excel(path_file, sheet_name='Отчет по операциям')
-    print(pd.to_datetime(df['Дата операции'], dayfirst=True))
+
     df['Дата операции'] = pd.to_datetime(df['Дата операции'], dayfirst=True)
+
+    start_date = datetime.strptime(period_data[0], '%d.%m.%Y %H:%M:%S')
+    end_data =datetime.strptime(period_data[1], '%d.%m.%Y %H:%M:%S')
+
+    filter_df = df[
+        (df['Дата операции'] >= start_date) &
+        (df['Дата операции'] <= end_data)
+    ]
+
+    sorted_df = filter_df.sort_values(by= 'Дата операции')
+
+    return  sorted_df
+
+def cards_masc_get(sort_period: DataFrame) -> list[dict]:
+    """
+        Функция которая принимает DataFrame  и возращает список карт с расходами
+    """
+    transactions_cards = []
+
+    card_sort = sort_period[
+        [
+            'Номер карты',
+         'Сумма операции',
+         'Кэшбэк',
+         'Сумма операции с округлением'
+        ]
+    ]
+    for index, value in card_sort.iterrows():
+        print(f"Идекс:{index}, Значение: {value}")
+        if value['Сумма операции'] < 0:
+            last_digits = str(value['Номер карты']).replace("*","")
+            total_spent = value['Сумма операции с округлением']
+            cashback = value['Кэшбэк']
