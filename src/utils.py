@@ -212,8 +212,7 @@ def get_currency(path_file_json: str) -> list[dict]:
     return  cerence_rates
 
 
-
-def get_stock_prices(json_file_path: str) -> Dict[str, List[Dict[str, Any]]]:
+def get_stock_prices(json_file_path: str) -> List[Dict[str, Any]]:
     """
     Получает данные о ценах акций из S&P500 по данным MarketStack API
     """
