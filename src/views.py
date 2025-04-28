@@ -1,16 +1,24 @@
 import json
 import logging
 from typing import Any
-
-from config import FILE_EX
+import os
+from config import FILE_EX, FILE_JSON
 from src.utils import (cards_masc_get, get_currency, get_path_period,
                        get_period_taim, get_stock_prices, get_taim_greeting,
                        transactions_top)
 
+# Создаем папку logs если её нет
+log_dir = os.path.join(os.path.dirname(__file__), '..', 'logs')
+os.makedirs(log_dir, exist_ok=True)
 logger = logging.getLogger(__name__)
 
+# Затем настраиваем логгер
+file_handler = logging.FileHandler(
+    os.path.join(log_dir, 'views.log'),
+    encoding='utf-8'
+)
 # Настройка обработчиков
-file_handler = logging.FileHandler("../logs/views.log", encoding="utf-8")
+# file_handler = logging.FileHandler("../logs/views.log", encoding="utf-8")
 file_handler.setLevel(logging.DEBUG)  # Убедимся, что обработчик принимает все уровни
 
 console_handler = logging.StreamHandler()
@@ -53,11 +61,11 @@ def accept_date(data_taim:str) -> list[dict[str, Any]]:
 
     # 4. Курс валют
     logger.info("Вычисляю курс валют")
-    currency_rates = get_currency("../data/user_settings.json")
+    currency_rates = get_currency(FILE_JSON)
 
     # 4. Курс валют
     logger.info("Проверяем стоимость акций")
-    stock_prices = get_stock_prices("../data/user_settings.json")
+    stock_prices = get_stock_prices(FILE_JSON)
 
     data = {
         "greeting": greeting,

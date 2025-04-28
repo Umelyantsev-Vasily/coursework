@@ -135,46 +135,89 @@ def get_path_period(path_file: str, period_data: str) -> DataFrame:
 
 def cards_masc_get(sort_period: DataFrame) -> list[dict]:
     """
-    Функция которая принимает DataFrame  и возращает список карт с расходами
+    Функция принимает DataFrame и возвращает список карт с расходами.
+    Возвращает полные номера карт (без звёздочек) и положительный кэшбэк.
     """
     logger.info("Расчитываю список карт с расходами...")
     try:
         transactions_cards = []
 
+        # Убедимся, что суммы - числа
+        sort_period["Сумма операции"] = pd.to_numeric(sort_period["Сумма операции"], errors="coerce")
+        sort_period["Сумма операции с округлением"] = pd.to_numeric(
+            sort_period["Сумма операции с округлением"], errors="coerce"
+        )
+
         card_sort = sort_period[
             ["Номер карты", "Сумма операции", "Кэшбэк", "Сумма операции с округлением"]
-        ]
-        for index, value in card_sort.iterrows():
-            if value["Сумма операции"] < 0:
-                last_digits = str(value["Номер карты"]).replace("*", "")
-                total_spent = value["Сумма операции с округлением"]
-                cashback = total_spent // 100
+        ].dropna()
 
-                row_dict = {
+        for _, row in card_sort.iterrows():
+            if row["Сумма операции"] < 0:
+                # Получаем полный номер карты без звёздочек
+                last_digits = str(row["Номер карты"]).replace("*", "")
+
+                total_spent = row["Сумма операции с округлением"]
+
+                # Кэшбэк берём из колонки "Кэшбэк" как положительное число
+                cashback = abs(float(row["Кэшбэк"]))
+
+                transactions_cards.append({
                     "last_digits": last_digits,
                     "total_spent": total_spent,
                     "cashback": cashback,
-                }
-                transactions_cards.append(row_dict)
+                })
 
     except KeyError as e:
         logger.error(f"Ошибка доступа к колонке данных: {e}")
-        print(f"Ошибка доступа к колонке данных: {e}")
-        return []
-    except TypeError as e:
-        logger.error(f"Ошибка типа данных: {e}")
-        print(f"Ошибка типа данных: {e}")
-        return []
-    except ValueError as e:
-        logger.error(f"Ошибка значения параметра: {e}")
-        print(f"Ошибка значения параметра: {e}")
         return []
     except Exception as e:
-        logger.error(f"Неожиданная ошибка при обработке транзакций: {e}")
-        print(f"Неожиданная ошибка при обработке транзакций: {e}")
+        logger.error(f"Ошибка при обработке данных: {e}")
         return []
 
     return transactions_cards
+# def cards_masc_get(sort_period: DataFrame) -> list[dict]:
+#     """
+#     Функция которая принимает DataFrame  и возращает список карт с расходами
+#     """
+#     logger.info("Расчитываю список карт с расходами...")
+#     try:
+#         transactions_cards = []
+#
+#         card_sort = sort_period[
+#             ["Номер карты", "Сумма операции", "Кэшбэк", "Сумма операции с округлением"]
+#         ]
+#         for index, value in card_sort.iterrows():
+#             if value["Сумма операции"] < 0:
+#                 last_digits = str(value["Номер карты"]).replace("*", "")
+#                 total_spent = value["Сумма операции с округлением"]
+#                 cashback = total_spent // 100
+#
+#                 row_dict = {
+#                     "last_digits": last_digits,
+#                     "total_spent": total_spent,
+#                     "cashback": cashback,
+#                 }
+#                 transactions_cards.append(row_dict)
+#
+#     except KeyError as e:
+#         logger.error(f"Ошибка доступа к колонке данных: {e}")
+#         print(f"Ошибка доступа к колонке данных: {e}")
+#         return []
+#     except TypeError as e:
+#         logger.error(f"Ошибка типа данных: {e}")
+#         print(f"Ошибка типа данных: {e}")
+#         return []
+#     except ValueError as e:
+#         logger.error(f"Ошибка значения параметра: {e}")
+#         print(f"Ошибка значения параметра: {e}")
+#         return []
+#     except Exception as e:
+#         logger.error(f"Неожиданная ошибка при обработке транзакций: {e}")
+#         print(f"Неожиданная ошибка при обработке транзакций: {e}")
+#         return []
+#
+#     return transactions_cards
 
 
 def transactions_top(sort_period: DataFrame, top_get):

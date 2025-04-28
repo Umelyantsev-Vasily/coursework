@@ -23,7 +23,7 @@ def mock_excel_data():
 
 
 def test_find_pfone_transactions_with_valid_phones(mock_excel_data):
-    with patch('pandas.read_excel', return_value=mock_excel_data):
+    with patch("pandas.read_excel", return_value=mock_excel_data):
         result = find_pfone_transactions("dummy.xlsx")
 
         # Должны вернуться 2 транзакции с валидными номерами
@@ -33,7 +33,7 @@ def test_find_pfone_transactions_with_valid_phones(mock_excel_data):
 
 
 def test_find_pfone_transactions_with_invalid_file():
-    with patch('pandas.read_excel', side_effect=Exception("File error")):
+    with patch("pandas.read_excel", side_effect=Exception("File error")):
         result = find_pfone_transactions(FILE_EX)
         assert result == []
 
@@ -43,7 +43,7 @@ def test_find_pfone_transactions_with_no_phones(mock_excel_data):
     no_phones_data = mock_excel_data.copy()
     no_phones_data["Описание"] = ["Оплата", "Перевод", None, "Покупка", "Счет"]
 
-    with patch('pandas.read_excel', return_value=no_phones_data):
+    with patch("pandas.read_excel", return_value=no_phones_data):
         result = find_pfone_transactions("no_phones.xlsx")
         assert result == []
 
@@ -51,10 +51,13 @@ def test_find_pfone_transactions_with_no_phones(mock_excel_data):
 def test_find_pfone_transactions_with_different_phone_formats(mock_excel_data):
     # Добавляем разные форматы номеров
     extra_data = mock_excel_data.copy()
-    extra_data.loc[len(extra_data)] = {"Описание": "Телефон +7-123-456-78-90", "Сумма": 600}
+    extra_data.loc[len(extra_data)] = {
+        "Описание": "Телефон +7-123-456-78-90",
+        "Сумма": 600,
+    }
     extra_data.loc[len(extra_data)] = {"Описание": "Номер 71234567890", "Сумма": 700}
 
-    with patch('pandas.read_excel', return_value=extra_data):
+    with patch("pandas.read_excel", return_value=extra_data):
         result = find_pfone_transactions(FILE_EX)
         # Должны найти 3 валидных номера из 4 возможных (81234567890 не подходит под шаблон)
         assert len(result) == 3
@@ -66,7 +69,7 @@ def test_find_pfone_transactions_with_empty_description(mock_excel_data):
     empty_data = mock_excel_data.copy()
     empty_data["Описание"] = [None, "", "   ", "  +7(123)456-78-90  ", None]
 
-    with patch('pandas.read_excel', return_value=empty_data):
+    with patch("pandas.read_excel", return_value=empty_data):
         result = find_pfone_transactions(FILE_EX)
         # Должна найти только одну транзакцию с номером
         assert len(result) == 1
