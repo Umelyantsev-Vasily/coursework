@@ -3,7 +3,7 @@ import logging
 import os
 from datetime import datetime
 from typing import Any, Dict, List
-
+from config import FILE_JSON
 import pandas as pd
 import requests
 from dotenv import load_dotenv
@@ -301,7 +301,7 @@ def get_currency(path_file_json: str) -> list[dict]:
     return cerence_rates
 
 
-def get_stock_prices(json_file_path: str) -> List[Dict[str, Any]]:
+def get_stock_prices(file: str) -> List[Dict[str, Any]]:
     """
     Получает данные о ценах акций из S&P500 по данным MarketStack API
     """
@@ -311,7 +311,7 @@ def get_stock_prices(json_file_path: str) -> List[Dict[str, Any]]:
     try:
         # Чтение JSON файла
         logger.info("Чтение JSON файла")
-        with open(json_file_path, "r", encoding="utf-8") as file:
+        with open(FILE_JSON, "r", encoding="utf-8") as file:
             user_data = json.load(file)
             stock_symbols = user_data.get("user_stocks", [])
 

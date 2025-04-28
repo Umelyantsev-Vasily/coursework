@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 import pandas as pd
 import os
-
+from datetime import datetime
 
 @pytest.fixture(autouse=True)
 def mock_logger():
@@ -42,9 +42,9 @@ def create_log_dir():
     log_dir = os.path.join(os.path.dirname(__file__), "..", "logs")
     os.makedirs(log_dir, exist_ok=True)
 
-
 @pytest.fixture
 def mock_dependencies():
+    # Создаем моки для всех зависимостей функции accept_date
     with (
         patch("src.views.get_period_taim") as mock_get_period,
         patch("src.views.get_path_period") as mock_get_path,
@@ -53,8 +53,17 @@ def mock_dependencies():
         patch("src.views.transactions_top") as mock_transactions,
         patch("src.views.get_currency") as mock_currency,
         patch("src.views.get_stock_prices") as mock_stocks,
-        patch("src.views.logger") as mock_logger,
+        patch("src.views.logger"),
     ):
+        # Настраиваем возвращаемые значения моков (реальные значения, а не MagicMock)
+        mock_get_period.return_value = (datetime(2023, 1, 1), datetime(2023, 1, 31))
+        mock_get_path.return_value = "mock_path"
+        mock_greeting.return_value = "Добрый день"
+        mock_cards.return_value = [{"card": "1234", "balance": 1000}]
+        mock_transactions.return_value = [{"amount": 100, "date": "2023-01-01"}]
+        mock_currency.return_value = {"USD": 75.5}
+        mock_stocks.return_value = {"AAPL": 150.0}
+
         yield {
             "get_period": mock_get_period,
             "get_path": mock_get_path,
@@ -63,9 +72,7 @@ def mock_dependencies():
             "transactions": mock_transactions,
             "currency": mock_currency,
             "stocks": mock_stocks,
-            "logger": mock_logger,
         }
-
 
 # Фикстура для тестовых данных
 @pytest.fixture
