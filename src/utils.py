@@ -1,11 +1,44 @@
 import json
-from typing import Dict,List,Any
+import logging
+import os
 from datetime import datetime
+from typing import Any, Dict, List
+
 import pandas as pd
-from pandas import DataFrame
 import requests
 from dotenv import load_dotenv
-import os
+from pandas import DataFrame
+
+logger = logging.getLogger(__name__)
+
+# Создаем папку logs если её нет
+log_dir = os.path.join(os.path.dirname(__file__), '..', 'logs')
+os.makedirs(log_dir, exist_ok=True)
+
+# Затем настраиваем логгер
+file_handler = logging.FileHandler(
+    os.path.join(log_dir, 'utils.log'),
+    encoding='utf-8'
+)
+file_handler.setLevel(logging.DEBUG)  # Убедимся, что обработчик принимает все уровни
+
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+
+# Форматтеры
+file_formatter = logging.Formatter(
+    "%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s: %(message)s"
+)
+file_handler.setFormatter(file_formatter)
+
+console_formatter = logging.Formatter("%(levelname)s: %(message)s")
+console_handler.setFormatter(console_formatter)
+
+# Добавляем обработчики к логгеру
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
+logger.setLevel(logging.DEBUG)
+
 
 load_dotenv()
 # Курс валют
@@ -33,98 +66,111 @@ def get_taim_greeting():
         return '<< Доброй ночи >>'
 
 
-def get_period_taim(data_taim: str, data_format:str="%Y-%m-%d %H:%M:%S"):
+
+def get_period_taim(data_taim: str, data_format: str = "%Y-%m-%d %H:%M:%S") -> list[str]:
     """
-        Функция которая принимает data_taim и возращает периуд с 1 дня месяца по следующий
+    Функция которая принимает data_taim и возращает периуд с 1 дня месяца по следующий
     """
+    logger.info("Расчитываю переуд с 1 дня месяца по следующий")
     try:
-        dt = datetime.strptime(data_taim, data_format )
+        dt = datetime.strptime(data_taim, data_format)
         first_days_of_the_month = dt.replace(day=1)
-        final_data_period = [first_days_of_the_month.strftime("%d.%m.%Y %H:%M:%S"),
-                             dt.strftime("%d.%m.%Y %H:%M:%S")]
+        final_data_period = [
+            first_days_of_the_month.strftime("%d.%m.%Y %H:%M:%S"),
+            dt.strftime("%d.%m.%Y %H:%M:%S"),
+        ]
         return final_data_period
     except ValueError as e:
+        logger.error(f"Ошибка формата даты: {e}")
         print(f"Ошибка формата даты: {e}. Ожидаемый формат: {data_format}")
         return []
     except TypeError as e:
+        logger.error(f"Ошибка типа данных: {e}")
         print(f"Ошибка типа данных: {e}")
         return []
     except Exception as e:
+        logger.error(f"Неожиданная ошибка при обработке даты: {e}")
         print(f"Неожиданная ошибка при обработке даты: {e}")
         return []
 
 
 def get_path_period(path_file: str, period_data: str) -> DataFrame:
-    """ Функция принимает путь к operations.xlsx файлу, периуд дат и возращает
-     таблицу в заданном периуде"""
+    """Функция принимает путь к operations.xlsx файлу, периуд дат и возращает
+    таблицу в заданном периуде
+    """
+    logger.info("Расчитываю таблицу...")
     try:
-        df = pd.read_excel(path_file, sheet_name='Отчет по операциям')
+        df = pd.read_excel(path_file, sheet_name="Отчет по операциям")
 
-        df['Дата операции'] = pd.to_datetime(df['Дата операции'], dayfirst=True)
+        df["Дата операции"] = pd.to_datetime(df["Дата операции"], dayfirst=True)
 
-        start_date = datetime.strptime(period_data[0], '%d.%m.%Y %H:%M:%S')
-        end_data =datetime.strptime(period_data[1], '%d.%m.%Y %H:%M:%S')
+        start_date = datetime.strptime(period_data[0], "%d.%m.%Y %H:%M:%S")
+        end_data = datetime.strptime(period_data[1], "%d.%m.%Y %H:%M:%S")
 
         filter_df = df[
-            (df['Дата операции'] >= start_date) &
-            (df['Дата операции'] <= end_data)
+            (df["Дата операции"] >= start_date) & (df["Дата операции"] <= end_data)
         ]
 
-        sorted_df = filter_df.sort_values(by= 'Дата операции')
+        sorted_df = filter_df.sort_values(by="Дата операции")
 
-        return  sorted_df
+        return sorted_df
 
-    except FileNotFoundError:
+    except FileNotFoundError as e:
+        logger.error(f"Ошибка:{e} Файл {path_file} не найден")
         print(f"Ошибка: Файл {path_file} не найден")
         return pd.DataFrame()
     except ValueError as e:
+        logger.error(f"Ошибка значения: {e}")
         print(f"Ошибка значения: {e}")
         return pd.DataFrame()
     except KeyError as e:
+        logger.error(f"Ошибка ключа: {e}")
         print(f"Ошибка ключа: {e}")
         return pd.DataFrame()
     except Exception as e:
+        logger.error(f"Неожиданная ошибка: {e}")
         print(f"Неожиданная ошибка: {e}")
         return pd.DataFrame()
 
+
 def cards_masc_get(sort_period: DataFrame) -> list[dict]:
     """
-        Функция которая принимает DataFrame  и возращает список карт с расходами
+    Функция которая принимает DataFrame  и возращает список карт с расходами
     """
+    logger.info("Расчитываю список карт с расходами...")
     try:
         transactions_cards = []
 
         card_sort = sort_period[
-            [
-             'Номер карты',
-             'Сумма операции',
-             'Кэшбэк',
-             'Сумма операции с округлением'
-            ]
+            ["Номер карты", "Сумма операции", "Кэшбэк", "Сумма операции с округлением"]
         ]
         for index, value in card_sort.iterrows():
-            if value['Сумма операции'] < 0:
-                last_digits = str(value['Номер карты']).replace("*","")
-                total_spent = value['Сумма операции с округлением']
+            if value["Сумма операции"] < 0:
+                last_digits = str(value["Номер карты"]).replace("*", "")
+                total_spent = value["Сумма операции с округлением"]
                 cashback = total_spent // 100
 
                 row_dict = {
                     "last_digits": last_digits,
                     "total_spent": total_spent,
-                    "cashback":cashback
+                    "cashback": cashback,
                 }
                 transactions_cards.append(row_dict)
 
     except KeyError as e:
+        logger.error(f"Ошибка доступа к колонке данных: {e}")
         print(f"Ошибка доступа к колонке данных: {e}")
         return []
     except TypeError as e:
+        logger.error(f"Ошибка типа данных: {e}")
         print(f"Ошибка типа данных: {e}")
         return []
     except ValueError as e:
+        logger.error(f"Ошибка значения параметра: {e}")
         print(f"Ошибка значения параметра: {e}")
         return []
     except Exception as e:
+        logger.error(f"Неожиданная ошибка при обработке транзакций: {e}")
         print(f"Неожиданная ошибка при обработке транзакций: {e}")
         return []
 
@@ -133,39 +179,39 @@ def cards_masc_get(sort_period: DataFrame) -> list[dict]:
 
 def transactions_top(sort_period: DataFrame, top_get):
     """
-        Функция принимает DataFrame и возращает топ транзакций по сумме платежа
+    Функция принимает DataFrame и возращает топ транзакций по сумме платежа
     """
+    logger.info("Расчитываю топ транзакции по сумме платежа")
     try:
         title_top_transaction = []
-        sorted_pay = sort_period.sort_values(by='Сумма операции', ascending=False)
+        sorted_pay = sort_period.sort_values(by="Сумма операции", ascending=False)
         top_transaction = sorted_pay.head(top_get)
         top_transaction_sorted = top_transaction[
-            [
-             'Дата платежа',
-             'Сумма операции',
-             'Категория',
-             'Описание'
-            ]
+            ["Дата платежа", "Сумма операции", "Категория", "Описание"]
         ]
         for index, value in top_transaction_sorted.iterrows():
             print(value)
             transaction = {
-              "date": f'{value['Дата платежа']}',
-              "amount": f'{value['Сумма операции']}',
-              "category": f'{value['Категория']}',
-              "description": f'{value['Описание']}'
+                "date": f"{value['Дата платежа']}",
+                "amount": f"{value['Сумма операции']}",
+                "category": f"{value['Категория']}",
+                "description": f"{value['Описание']}",
             }
             title_top_transaction.append(transaction)
     except KeyError as e:
+        logger.error(f"Ошибка доступа к колонке данных: {e}")
         print(f"Ошибка доступа к колонке данных: {e}")
         return []
     except TypeError as e:
+        logger.error(f"Ошибка типа данных: {e}")
         print(f"Ошибка типа данных: {e}")
         return []
     except ValueError as e:
+        logger.error(f"Ошибка значения параметра: {e}")
         print(f"Ошибка значения параметра: {e}")
         return []
     except Exception as e:
+        logger.error(f"Неожиданная ошибка при обработке транзакций: {e}")
         print(f"Неожиданная ошибка при обработке транзакций: {e}")
         return []
 
@@ -174,90 +220,101 @@ def transactions_top(sort_period: DataFrame, top_get):
 
 def get_currency(path_file_json: str) -> list[dict]:
     """
-        Функция принимает path_file_json и возращает курс валют
+    Функция принимает path_file_json и возращает курс валют
     """
     cerence_rates = []
+    logger.info("Расчитываю курс валют...")
     try:
-        with open(path_file_json,'r', encoding='utf-8') as file:
+        logger.info("Открываю json файл")
+        with open(path_file_json, "r", encoding="utf-8") as file:
             data = json.load(file)
-            curences = data['user_currencies']
+            curences = data["user_currencies"]
             for curence in curences:
-                params = {
-                    'amount':1,
-                    'from': f'{curence}',
-                    'to': 'RUB'
-                }
+                params = {"amount": 1, "from": f"{curence}", "to": "RUB"}
                 headers = {
-                    'apikei': EXCHANGE_RATES_API_KEY,
+                    "apikei": EXCHANGE_RATES_API_KEY,
                 }
-                response = requests.request("GET", BASE_API_URL, headers=headers, data=params)
+                response = requests.request(
+                    "GET", BASE_API_URL, headers=headers, data=params
+                )
                 status_code = response.status_code
-                if status_code == 200 :
+                if status_code == 200:
                     result = response.json()
-                    curence_response = result['query']['from']
-                    curence_amount = round(result['result'],2)
+                    curence_response = result["query"]["from"]
+                    curence_amount = round(result["result"], 2)
                     cerence_rates.append(
-                        {
-                                "currency": f'{curence_response}',
-                                "rate": f'{curence_amount}'
-                        }
+                        {"currency": f"{curence_response}", "rate": f"{curence_amount}"}
                     )
     except json.JSONDecodeError:
+        logger.error("Ошибка чтения JSON-файла")
         print("Ошибка чтения JSON-файла")
     except requests.exceptions.RequestException as e:
+        logger.error(f"Ошибка запроса к API: {e}")
         print(f"Ошибка запроса к API: {e}")
     except Exception as e:
+        logger.error(f"Неожиданная ошибка: {e}")
         print(f"Неожиданная ошибка: {e}")
-
-    return  cerence_rates
+    logger.info("Возращаю курс валют")
+    return cerence_rates
 
 
 def get_stock_prices(json_file_path: str) -> List[Dict[str, Any]]:
     """
     Получает данные о ценах акций из S&P500 по данным MarketStack API
     """
+    logger.info("Получаю данные по акциям...")
     result = []
 
     try:
         # Чтение JSON файла
-        with open(json_file_path, 'r', encoding='utf-8') as file:
+        logger.info("Чтение JSON файла")
+        with open(json_file_path, "r", encoding="utf-8") as file:
             user_data = json.load(file)
-            stock_symbols = user_data.get('user_stocks', [])
+            stock_symbols = user_data.get("user_stocks", [])
 
             # Формирование запроса к API
+            logger.info("Формирование запроса к API")
             params = {
-                'access_key': MARKETSTACK_API_KEY,
-                'symbols': ','.join(stock_symbols),
-                'limit': 1
+                "access_key": MARKETSTACK_API_KEY,
+                "symbols": ",".join(stock_symbols),
+                "limit": 1,
             }
 
             # Выполнение запроса
+            logger.info("Выполнение запроса")
             response = requests.get(
-                f"{MARKETSTACK_BASE_API_URL}/eod/latest",
-                params=params,
-                timeout=10
+                f"{MARKETSTACK_BASE_API_URL}/eod/latest", params=params, timeout=10
             )
             response.raise_for_status()
 
             api_data = response.json()
 
             # Обработка данных
-            if api_data.get('data'):
-                for stock in api_data['data']:
-                    result.append({
-                        "stock": stock['symbol'],
-                        "price": float(stock['close'])  # Явное преобразование к float
-                    })
+            logger.info("Обработка данных")
+            if api_data.get("data"):
+                for stock in api_data["data"]:
+                    result.append(
+                        {
+                            "stock": stock["symbol"],
+                            "price": float(
+                                stock["close"]
+                            ),  # Явное преобразование к float
+                        }
+                    )
             else:
                 print("API не вернуло данных по акциям")
 
     except json.JSONDecodeError:
+        logger.error("Ошибка: Файл не является валидным JSON")
         print("Ошибка: Файл не является валидным JSON")
     except requests.exceptions.RequestException as e:
+        logger.error(f"Ошибка при запросе к API: {e}")
         print(f"Ошибка при запросе к API: {e}")
     except KeyError as e:
+        logger.error(f"Отсутствует ожидаемое поле в ответе: {e}")
         print(f"Отсутствует ожидаемое поле в ответе: {e}")
     except Exception as e:
+        logger.error(f"Неожиданная ошибка: {e}")
         print(f"Неожиданная ошибка: {e}")
 
     return result
