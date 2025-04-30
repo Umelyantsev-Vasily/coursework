@@ -193,8 +193,8 @@ logger.setLevel(logging.DEBUG)
 ```
 ---
 ###### Документация:
-- Дополнительную информацию о структуре проекта и API можно найти в 
-- Дополнительную нформацию о тесте можно посмотреть:
+- Дополнительную информацию о структуре проекта и API можно найти в [GitHab](https://github.com/Umelyantsev-Vasily/coursework)
+- Дополнительную нформацию о тесте можно посмотреть: [tests](file:///C:/Users/tanec/PycharmProjects/HomWorc/htmlcov/function_index.html)
 ## Лицензия:
 
 Проект распространяется под [лицензией MIT](LICENSE).
