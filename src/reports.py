@@ -1,22 +1,21 @@
 import json
 import logging
+import os
 from datetime import datetime, timedelta
 from functools import wraps
-import os
-import pandas as pd
 
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
 
 # Создаем папку logs если её нет
-log_dir = os.path.join(os.path.dirname(__file__), '..', 'logs')
+log_dir = os.path.join(os.path.dirname(__file__), "..", "logs")
 os.makedirs(log_dir, exist_ok=True)
 
 # Затем настраиваем логгер
 file_handler = logging.FileHandler(
-    os.path.join(log_dir, 'reports.log'),
-    encoding='utf-8'
+    os.path.join(log_dir, "reports.log"), encoding="utf-8"
 )
 file_handler.setLevel(logging.DEBUG)  # Убедимся, что обработчик принимает все уровни
 

@@ -3,23 +3,22 @@ import logging
 import os
 from datetime import datetime
 from typing import Any, Dict, List
-from config import FILE_JSON
+
 import pandas as pd
 import requests
 from dotenv import load_dotenv
 from pandas import DataFrame
 
+from config import FILE_JSON
+
 logger = logging.getLogger(__name__)
 
 # Создаем папку logs если её нет
-log_dir = os.path.join(os.path.dirname(__file__), '..', 'logs')
+log_dir = os.path.join(os.path.dirname(__file__), "..", "logs")
 os.makedirs(log_dir, exist_ok=True)
 
 # Затем настраиваем логгер
-file_handler = logging.FileHandler(
-    os.path.join(log_dir, 'utils.log'),
-    encoding='utf-8'
-)
+file_handler = logging.FileHandler(os.path.join(log_dir, "utils.log"), encoding="utf-8")
 file_handler.setLevel(logging.DEBUG)  # Убедимся, что обработчик принимает все уровни
 
 console_handler = logging.StreamHandler()
@@ -51,23 +50,24 @@ MARKETSTACK_BASE_API_URL = "http://api.marketstack.com/v1"
 
 
 def get_taim_greeting():
-    """ Фуекция возращает: «Доброе утро» / «Добрый день» / «Добрый вечер» / «Доброй ночи»
-        в зависимости от текущего времени."""
+    """Фуекция возращает: «Доброе утро» / «Добрый день» / «Добрый вечер» / «Доброй ночи»
+    в зависимости от текущего времени."""
 
     detaim_user = datetime.now().hour
 
     if 5 <= detaim_user < 12:
-        return '<< Доброе утро! >>'
+        return "<< Доброе утро! >>"
     elif 12 <= detaim_user < 18:
-        return '<< Добрый день! >>'
+        return "<< Добрый день! >>"
     elif 18 <= detaim_user < 22:
-        return '<< Добрый вечер! >>'
+        return "<< Добрый вечер! >>"
     else:
-        return '<< Доброй ночи >>'
+        return "<< Доброй ночи >>"
 
 
-
-def get_period_taim(data_taim: str, data_format: str = "%Y-%m-%d %H:%M:%S") -> list[str]:
+def get_period_taim(
+    data_taim: str, data_format: str = "%Y-%m-%d %H:%M:%S"
+) -> list[str]:
     """
     Функция которая принимает data_taim и возращает периуд с 1 дня месяца по следующий
     """
@@ -143,7 +143,9 @@ def cards_masc_get(sort_period: DataFrame) -> list[dict]:
         transactions_cards = []
 
         # Убедимся, что суммы - числа
-        sort_period["Сумма операции"] = pd.to_numeric(sort_period["Сумма операции"], errors="coerce")
+        sort_period["Сумма операции"] = pd.to_numeric(
+            sort_period["Сумма операции"], errors="coerce"
+        )
         sort_period["Сумма операции с округлением"] = pd.to_numeric(
             sort_period["Сумма операции с округлением"], errors="coerce"
         )
@@ -162,11 +164,13 @@ def cards_masc_get(sort_period: DataFrame) -> list[dict]:
                 # Кэшбэк берём из колонки "Кэшбэк" как положительное число
                 cashback = abs(float(row["Кэшбэк"]))
 
-                transactions_cards.append({
-                    "last_digits": last_digits,
-                    "total_spent": total_spent,
-                    "cashback": cashback,
-                })
+                transactions_cards.append(
+                    {
+                        "last_digits": last_digits,
+                        "total_spent": total_spent,
+                        "cashback": cashback,
+                    }
+                )
 
     except KeyError as e:
         logger.error(f"Ошибка доступа к колонке данных: {e}")
@@ -176,6 +180,8 @@ def cards_masc_get(sort_period: DataFrame) -> list[dict]:
         return []
 
     return transactions_cards
+
+
 # def cards_masc_get(sort_period: DataFrame) -> list[dict]:
 #     """
 #     Функция которая принимает DataFrame  и возращает список карт с расходами

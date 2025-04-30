@@ -1,18 +1,14 @@
-import pytest
-from unittest.mock import patch
-import pandas as pd
 import json
-from src.reports import get_dataframe
-from config import FILE_EX
 import logging
+from unittest.mock import patch
+
+import pandas as pd
+import pytest
+
+from config import FILE_EX
+from src.reports import get_dataframe
 
 logging.disable(logging.CRITICAL)
-
-
-@pytest.fixture(autouse=True)
-def mock_logging(tmp_path):
-    with patch("logging.FileHandler") as mock:
-        yield
 
 
 def test_spending_by_category_with_matches():

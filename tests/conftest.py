@@ -1,8 +1,10 @@
-import pytest
-from unittest.mock import patch, MagicMock
-import pandas as pd
 import os
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pandas as pd
+import pytest
+
 
 @pytest.fixture(autouse=True)
 def mock_logger():
@@ -42,6 +44,7 @@ def create_log_dir():
     log_dir = os.path.join(os.path.dirname(__file__), "..", "logs")
     os.makedirs(log_dir, exist_ok=True)
 
+
 @pytest.fixture
 def mock_dependencies():
     # Создаем моки для всех зависимостей функции accept_date
@@ -74,6 +77,7 @@ def mock_dependencies():
             "stocks": mock_stocks,
         }
 
+
 # Фикстура для тестовых данных
 @pytest.fixture
 def sample_data():
@@ -85,3 +89,9 @@ def sample_data():
             "Описание": ["Ресторан", "Ноутбук", "Куртка"],
         }
     )
+
+
+# @pytest.fixture(autouse=True)
+# def mock_logging(tmp_path):
+#     with patch("logging.FileHandler") as mock:
+#         yield

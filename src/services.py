@@ -1,18 +1,18 @@
 import logging
-import re
 import os
+import re
+
 import pandas as pd
 
 logger = logging.getLogger(__name__)
 
 # Создаем папку logs если её нет
-log_dir = os.path.join(os.path.dirname(__file__), '..', 'logs')
+log_dir = os.path.join(os.path.dirname(__file__), "..", "logs")
 os.makedirs(log_dir, exist_ok=True)
 
 # Затем настраиваем логгер
 file_handler = logging.FileHandler(
-    os.path.join(log_dir, 'services.log'),
-    encoding='utf-8'
+    os.path.join(log_dir, "services.log"), encoding="utf-8"
 )
 file_handler.setLevel(logging.DEBUG)  # Убедимся, что обработчик принимает все уровни
 

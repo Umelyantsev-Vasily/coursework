@@ -1,9 +1,6 @@
-import pytest
-from unittest.mock import patch
-from datetime import datetime
 import json
-from src.views import accept_date
 
+from src.views import accept_date
 
 
 def test_accept_date_returns_valid_json(mock_dependencies):

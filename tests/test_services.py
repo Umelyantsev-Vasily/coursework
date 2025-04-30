@@ -1,10 +1,10 @@
-import pytest
-from unittest.mock import patch, mock_open
-import pandas as pd
-import re
-from src.services import find_pfone_transactions
-from config import FILE_EX
+from unittest.mock import patch
 
+import pandas as pd
+import pytest
+
+from config import FILE_EX
+from src.services import find_pfone_transactions
 
 # Тестовые данные
 TEST_EXCEL_DATA = [
