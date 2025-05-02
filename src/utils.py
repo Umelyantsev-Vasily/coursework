@@ -25,9 +25,7 @@ console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)
 
 # Форматтеры
-file_formatter = logging.Formatter(
-    "%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s: %(message)s"
-)
+file_formatter = logging.Formatter("%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s: %(message)s")
 file_handler.setFormatter(file_formatter)
 
 console_formatter = logging.Formatter("%(levelname)s: %(message)s")
@@ -65,9 +63,7 @@ def get_taim_greeting():
         return "<< Доброй ночи >>"
 
 
-def get_period_taim(
-    data_taim: str, data_format: str = "%Y-%m-%d %H:%M:%S"
-) -> list[str]:
+def get_period_taim(data_taim: str, data_format: str = "%Y-%m-%d %H:%M:%S") -> list[str]:
     """
     Функция которая принимает data_taim и возращает периуд с 1 дня месяца по следующий
     """
@@ -107,9 +103,7 @@ def get_path_period(path_file: str, period_data: str) -> DataFrame:
         start_date = datetime.strptime(period_data[0], "%d.%m.%Y %H:%M:%S")
         end_data = datetime.strptime(period_data[1], "%d.%m.%Y %H:%M:%S")
 
-        filter_df = df[
-            (df["Дата операции"] >= start_date) & (df["Дата операции"] <= end_data)
-        ]
+        filter_df = df[(df["Дата операции"] >= start_date) & (df["Дата операции"] <= end_data)]
 
         sorted_df = filter_df.sort_values(by="Дата операции")
 
@@ -143,16 +137,12 @@ def cards_masc_get(sort_period: DataFrame) -> list[dict]:
         transactions_cards = []
 
         # Убедимся, что суммы - числа
-        sort_period["Сумма операции"] = pd.to_numeric(
-            sort_period["Сумма операции"], errors="coerce"
-        )
+        sort_period["Сумма операции"] = pd.to_numeric(sort_period["Сумма операции"], errors="coerce")
         sort_period["Сумма операции с округлением"] = pd.to_numeric(
             sort_period["Сумма операции с округлением"], errors="coerce"
         )
 
-        card_sort = sort_period[
-            ["Номер карты", "Сумма операции", "Кэшбэк", "Сумма операции с округлением"]
-        ].dropna()
+        card_sort = sort_period[["Номер карты", "Сумма операции", "Кэшбэк", "Сумма операции с округлением"]]
 
         for _, row in card_sort.iterrows():
             if row["Сумма операции"] < 0:
@@ -235,9 +225,7 @@ def transactions_top(sort_period: DataFrame, top_get):
         title_top_transaction = []
         sorted_pay = sort_period.sort_values(by="Сумма операции", ascending=False)
         top_transaction = sorted_pay.head(top_get)
-        top_transaction_sorted = top_transaction[
-            ["Дата платежа", "Сумма операции", "Категория", "Описание"]
-        ]
+        top_transaction_sorted = top_transaction[["Дата платежа", "Сумма операции", "Категория", "Описание"]]
         for index, value in top_transaction_sorted.iterrows():
             print(value)
             transaction = {
@@ -283,17 +271,13 @@ def get_currency(path_file_json: str) -> list[dict]:
                 headers = {
                     "apikei": EXCHANGE_RATES_API_KEY,
                 }
-                response = requests.request(
-                    "GET", BASE_API_URL, headers=headers, data=params
-                )
+                response = requests.request("GET", BASE_API_URL, headers=headers, data=params)
                 status_code = response.status_code
                 if status_code == 200:
                     result = response.json()
                     curence_response = result["query"]["from"]
                     curence_amount = round(result["result"], 2)
-                    cerence_rates.append(
-                        {"currency": f"{curence_response}", "rate": f"{curence_amount}"}
-                    )
+                    cerence_rates.append({"currency": f"{curence_response}", "rate": f"{curence_amount}"})
     except json.JSONDecodeError:
         logger.error("Ошибка чтения JSON-файла")
         print("Ошибка чтения JSON-файла")
@@ -331,9 +315,7 @@ def get_stock_prices(file: str) -> List[Dict[str, Any]]:
 
             # Выполнение запроса
             logger.info("Выполнение запроса")
-            response = requests.get(
-                f"{MARKETSTACK_BASE_API_URL}/eod/latest", params=params, timeout=10
-            )
+            response = requests.get(f"{MARKETSTACK_BASE_API_URL}/eod/latest", params=params, timeout=10)
             response.raise_for_status()
 
             api_data = response.json()
@@ -345,9 +327,7 @@ def get_stock_prices(file: str) -> List[Dict[str, Any]]:
                     result.append(
                         {
                             "stock": stock["symbol"],
-                            "price": float(
-                                stock["close"]
-                            ),  # Явное преобразование к float
+                            "price": float(stock["close"]),  # Явное преобразование к float
                         }
                     )
             else:

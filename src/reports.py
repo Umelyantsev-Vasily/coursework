@@ -14,18 +14,14 @@ log_dir = os.path.join(os.path.dirname(__file__), "..", "logs")
 os.makedirs(log_dir, exist_ok=True)
 
 # Затем настраиваем логгер
-file_handler = logging.FileHandler(
-    os.path.join(log_dir, "reports.log"), encoding="utf-8"
-)
+file_handler = logging.FileHandler(os.path.join(log_dir, "reports.log"), encoding="utf-8")
 file_handler.setLevel(logging.DEBUG)  # Убедимся, что обработчик принимает все уровни
 
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)
 
 # Форматтеры
-file_formatter = logging.Formatter(
-    "%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s: %(message)s"
-)
+file_formatter = logging.Formatter("%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s: %(message)s")
 file_handler.setFormatter(file_formatter)
 
 console_formatter = logging.Formatter("%(levelname)s: %(message)s")
@@ -53,21 +49,15 @@ def spending_by_category(date=None, category=None):
 
             # Преобразуем дату, если она указана
             logger.info("Преобразую дату")
-            end_date = (
-                datetime.strptime(date, "%d.%m.%Y %H:%M:%S") if date else datetime.now()
-            )
+            end_date = datetime.strptime(date, "%d.%m.%Y %H:%M:%S") if date else datetime.now()
             start_date = end_date - timedelta(days=90)
 
             # Приводим колонки с датами к datetime
-            df["Дата операции"] = pd.to_datetime(
-                df["Дата операции"], format="%d.%m.%Y %H:%M:%S"
-            )
+            df["Дата операции"] = pd.to_datetime(df["Дата операции"], format="%d.%m.%Y %H:%M:%S")
 
             # Фильтруем данные по категории и дате
             filtered = df[
-                (df["Категория"] == category)
-                & (df["Дата операции"] >= start_date)
-                & (df["Дата операции"] <= end_date)
+                (df["Категория"] == category) & (df["Дата операции"] >= start_date) & (df["Дата операции"] <= end_date)
             ]
 
             # Конвертируем в список словарей
