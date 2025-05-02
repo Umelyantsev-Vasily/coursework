@@ -29,9 +29,7 @@ console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)
 
 # Форматтеры
-file_formatter = logging.Formatter(
-    "%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s: %(message)s"
-)
+file_formatter = logging.Formatter("%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s: %(message)s")
 file_handler.setFormatter(file_formatter)
 
 console_formatter = logging.Formatter("%(levelname)s: %(message)s")
