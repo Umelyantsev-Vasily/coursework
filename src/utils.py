@@ -131,7 +131,6 @@ def cards_masc_get(sort_period: DataFrame) -> list[dict]:
     """
     Функция принимает DataFrame и возвращает список карт с расходами.
     Возвращает полные номера карт (без звёздочек) и положительный кэшбэк.
-    Суммирует все операции по каждой карте.
     """
     logger.info("Расчитываю список карт с расходами...")
     try:
@@ -142,27 +141,26 @@ def cards_masc_get(sort_period: DataFrame) -> list[dict]:
         sort_period["Сумма операции с округлением"] = pd.to_numeric(
             sort_period["Сумма операции с округлением"], errors="coerce"
         )
-        sort_period["Кэшбэк"] = pd.to_numeric(sort_period["Кэшбэк"], errors="coerce")
 
-        # Оставляем только расходные операции
-        expenses = sort_period[sort_period["Сумма операции"] < 0].copy()
+        card_sort = sort_period[["Номер карты", "Сумма операции", "Кэшбэк", "Сумма операции с округлением"]]
 
-        # Очищаем номер карты
-        expenses["last_digits"] = expenses["Номер карты"].astype(str).str.replace("*", "")
+        for _, row in card_sort.iterrows():
+            if row["Сумма операции"] < 0:
+                # Получаем полный номер карты без звёздочек
+                last_digits = str(row["Номер карты"]).replace("*", "")
 
-        # Группируем по картам и суммируем
-        grouped = (
-            expenses.groupby("last_digits").agg({"Сумма операции с округлением": "sum", "Кэшбэк": "sum"}).reset_index()
-        )
+                total_spent = row["Сумма операции с округлением"]
 
-        for _, row in grouped.iterrows():
-            transactions_cards.append(
-                {
-                    "last_digits": row["last_digits"],
-                    "total_spent": abs(row["Сумма операции с округлением"]),  # Берем модуль суммы
-                    "cashback": abs(row["Кэшбэк"]),  # Берем модуль кэшбэка
-                }
-            )
+                # Кэшбэк берём из колонки "Кэшбэк" как положительное число
+                cashback = abs(float(row["Кэшбэк"]))
+
+                transactions_cards.append(
+                    {
+                        "last_digits": last_digits,
+                        "total_spent": total_spent,
+                        "cashback": cashback,
+                    }
+                )
 
     except KeyError as e:
         logger.error(f"Ошибка доступа к колонке данных: {e}")
